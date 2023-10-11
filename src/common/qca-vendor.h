@@ -2357,6 +2357,18 @@ enum qca_vendor_attr_wisa_cmd {
  *	change.
  *
  *  @QCA_VENDOR_ELEM_ALLPLAY: Allplay element
+ *
+ * @QCA_VS_ELEM_RSNE_OVERRIDE: RSNE override
+ *	Used in BSS discovery phase frames (e.g., Beacon and Probe Response
+ *	frame) to indicate available RSN options for STAs that support the
+ *	override mechanism. Payload is encoded identically to RSNE. Also used
+ *	in (Re)Association Request frame to indicate support for RSNE
+ *	overriding.
+ *
+ * @QCA_VS_ELEM_RSNXE_OVERRIDE: RSNXE override
+ *	Used in BSS discovery phase frames (e.g., Beacon and Probe Response
+ *	frame) to indicate available RSN options for STAs that support the
+ *	override mechanism. Payload is encoded identically to RSNXE.
  */
 enum qca_vendor_element_id {
 	QCA_VENDOR_ELEM_P2P_PREF_CHAN_LIST = 0,
@@ -2366,6 +2378,8 @@ enum qca_vendor_element_id {
 	QCA_VENDOR_ELEM_MU_EDCA_PARAMS = 4,
 	QCA_VENDOR_ELEM_BSS_COLOR_CHANGE = 5,
 	QCA_VENDOR_ELEM_ALLPLAY = 6,
+	QCA_VENDOR_ELEM_RSNE_OVERRIDE = 7,
+	QCA_VENDOR_ELEM_RSNXE_OVERRIDE = 8,
 };
 
 /**
