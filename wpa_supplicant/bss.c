@@ -1836,3 +1836,15 @@ out:
 	wpabuf_free(mlbuf);
 	return removed_links;
 }
+
+
+const u8 * wpa_bss_get_rsne(const struct wpa_bss *bss)
+{
+	return wpa_bss_get_ie(bss, WLAN_EID_RSN);
+}
+
+
+const u8 * wpa_bss_get_rsnxe(const struct wpa_bss *bss)
+{
+	return wpa_bss_get_ie(bss, WLAN_EID_RSNX);
+}
