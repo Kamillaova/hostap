@@ -662,6 +662,8 @@ void wpa_deinit(struct wpa_authenticator *wpa_auth)
 
 
 	os_free(wpa_auth->wpa_ie);
+	os_free(wpa_auth->rsne_override);
+	os_free(wpa_auth->rsnxe_override);
 
 	group = wpa_auth->group;
 	while (group) {
@@ -3884,9 +3886,17 @@ void wpa_auth_ml_get_rsn_info(struct wpa_authenticator *a,
 {
 	info->rsn_ies = a->wpa_ie;
 	info->rsn_ies_len = a->wpa_ie_len;
+	info->rsne_override = a->rsne_override;
+	info->rsnxe_override = a->rsnxe_override;
 
 	wpa_printf(MSG_DEBUG, "RSN: MLD: link_id=%u, rsn_ies_len=%zu",
 		   info->link_id, info->rsn_ies_len);
+	if (info->rsne_override)
+		wpa_printf(MSG_DEBUG,
+			   "RSN: MLD: override len: RSNE=%u RSNXE=%u",
+			   info->rsne_override ? 2 + info->rsne_override[1] : 0,
+			   info->rsnxe_override ?
+			   2 + info->rsnxe_override[1] : 0);
 }
 
 
@@ -4239,7 +4249,7 @@ SM_STATE(WPA_PTK, PTKINITNEGOTIATING)
 	struct wpa_group *gsm = sm->group;
 	u8 *wpa_ie;
 	int secure, gtkidx, encr = 0;
-	u8 *wpa_ie_buf = NULL, *wpa_ie_buf2 = NULL;
+	u8 *wpa_ie_buf = NULL, *wpa_ie_buf2 = NULL, *wpa_ie_buf3 = NULL;
 	u8 hdr[2];
 	struct wpa_auth_config *conf = &sm->wpa_auth->conf;
 #ifdef CONFIG_IEEE80211BE
@@ -4279,6 +4289,74 @@ SM_STATE(WPA_PTK, PTKINITNEGOTIATING)
 		if (wpa_ie[0] == WLAN_EID_MOBILITY_DOMAIN)
 			wpa_ie = wpa_ie + wpa_ie[1] + 2;
 		wpa_ie_len = wpa_ie[1] + 2;
+	}
+	if (sm->rsn_override) {
+		const u8 *mde, *fte, *tie, *tie2 = NULL;
+		const u8 *override_rsne = NULL, *override_rsnxe = NULL;
+		const struct element *elem;
+
+		wpa_printf(MSG_DEBUG,
+			   "RSN: Use RSNE/RSNXE override element contents");
+		mde = get_ie(wpa_ie, wpa_ie_len, WLAN_EID_MOBILITY_DOMAIN);
+		fte = get_ie(wpa_ie, wpa_ie_len, WLAN_EID_FAST_BSS_TRANSITION);
+		tie = get_ie(wpa_ie, wpa_ie_len, WLAN_EID_TIMEOUT_INTERVAL);
+		if (tie) {
+			const u8 *next = tie + 2 + tie[1];
+
+			tie2 = get_ie(next, wpa_ie + wpa_ie_len - next,
+				      WLAN_EID_TIMEOUT_INTERVAL);
+		}
+		for_each_element_id(elem, WLAN_EID_VENDOR_SPECIFIC,
+				    wpa_ie, wpa_ie_len) {
+			if (elem->datalen >= 4) {
+				if (WPA_GET_BE32(elem->data) ==
+				    RSNE_OVERRIDE_IE_VENDOR_TYPE)
+					override_rsne = &elem->id;
+				if (WPA_GET_BE32(elem->data) ==
+				    RSNXE_OVERRIDE_IE_VENDOR_TYPE)
+					override_rsnxe = &elem->id;
+			}
+		}
+		wpa_hexdump(MSG_DEBUG, "EAPOL-Key msg 3/4 IEs before edits",
+			    wpa_ie, wpa_ie_len);
+		wpa_ie_buf3 = os_malloc(wpa_ie_len);
+		if (!wpa_ie_buf3)
+			goto done;
+		pos = wpa_ie_buf3;
+		if (override_rsne) {
+			*pos++ = WLAN_EID_RSN;
+			*pos++ = override_rsne[1] - 4;
+			os_memcpy(pos, &override_rsne[2 + 4],
+				  override_rsne[1] - 4);
+			pos += override_rsne[1] - 4;
+		}
+		if (mde) {
+			os_memcpy(pos, mde, 2 + mde[1]);
+			pos += 2 + mde[1];
+		}
+		if (fte) {
+			os_memcpy(pos, fte, 2 + fte[1]);
+			pos += 2 + fte[1];
+		}
+		if (tie) {
+			os_memcpy(pos, tie, 2 + tie[1]);
+			pos += 2 + tie[1];
+		}
+		if (tie2) {
+			os_memcpy(pos, tie2, 2 + tie2[1]);
+			pos += 2 + tie2[1];
+		}
+		if (override_rsnxe) {
+			*pos++ = WLAN_EID_RSNX;
+			*pos++ = override_rsnxe[1] - 4;
+			os_memcpy(pos, &override_rsnxe[2 + 4],
+				  override_rsnxe[1] - 4);
+			pos += override_rsnxe[1] - 4;
+		}
+		wpa_ie = wpa_ie_buf3;
+		wpa_ie_len = pos - wpa_ie_buf3;
+		wpa_hexdump(MSG_DEBUG, "EAPOL-Key msg 3/4 IEs after edits",
+			    wpa_ie, wpa_ie_len);
 	}
 #ifdef CONFIG_TESTING_OPTIONS
 	if (conf->rsne_override_eapol_set) {
@@ -4539,6 +4617,7 @@ done:
 	bin_clear_free(kde, kde_len);
 	os_free(wpa_ie_buf);
 	os_free(wpa_ie_buf2);
+	os_free(wpa_ie_buf3);
 }
 
 
@@ -6413,6 +6492,13 @@ void wpa_auth_set_auth_alg(struct wpa_state_machine *sm, u16 auth_alg)
 }
 
 
+void wpa_auth_set_rsn_override(struct wpa_state_machine *sm, bool val)
+{
+	if (sm)
+		sm->rsn_override = val;
+}
+
+
 #ifdef CONFIG_DPP2
 void wpa_auth_set_dpp_z(struct wpa_state_machine *sm, const struct wpabuf *z)
 {
@@ -6837,6 +6923,20 @@ void wpa_auth_set_ml_info(struct wpa_state_machine *sm, const u8 *mld_addr,
 		u8 rsn_ies_len;
 
 		sm_link = &sm->mld_links[ml_rsn_info.links[i].link_id];
+		if (sm->rsn_override) {
+			wpa_printf(MSG_INFO,
+				   "WPA_AUTH: MLD: Use RSNE/RSNXE override values for link %d",
+				   i);
+			sm_link->rsne = ml_rsn_info.links[i].rsne_override;
+			sm_link->rsne_len = sm_link->rsne ?
+				2 + sm_link->rsne[1] : 0;
+
+			sm_link->rsnxe = ml_rsn_info.links[i].rsnxe_override;
+			sm_link->rsnxe_len = sm_link->rsnxe ?
+				2 + sm_link->rsnxe[1] : 0;
+			continue;
+		}
+
 		rsn_ies = ml_rsn_info.links[i].rsn_ies;
 		rsn_ies_len = ml_rsn_info.links[i].rsn_ies_len;
 

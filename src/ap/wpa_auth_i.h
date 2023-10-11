@@ -124,6 +124,8 @@ struct wpa_state_machine {
 	u32 dot11RSNAStatsTKIPLocalMICFailures;
 	u32 dot11RSNAStatsTKIPRemoteMICFailures;
 
+	bool rsn_override;
+
 #ifdef CONFIG_IEEE80211R_AP
 	u8 xxkey[PMK_LEN_MAX]; /* PSK or the second 256 bits of MSK, or the
 				* first 384 bits of MSK */
@@ -253,6 +255,8 @@ struct wpa_authenticator {
 
 	u8 *wpa_ie;
 	size_t wpa_ie_len;
+	u8 *rsne_override; /* RSNE with overridden payload */
+	u8 *rsnxe_override; /* RSNXE with overridden payload */
 
 	u8 addr[ETH_ALEN];
 
