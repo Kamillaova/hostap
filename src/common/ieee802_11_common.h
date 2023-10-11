@@ -109,6 +109,7 @@ struct ieee802_11_elems {
 	const u8 *tdls_mle;
 	const u8 *prior_access_mle;
 	const u8 *mbssid_known_bss;
+	const u8 *rsne_override;
 
 	u8 ssid_len;
 	u8 supp_rates_len;
@@ -171,6 +172,7 @@ struct ieee802_11_elems {
 	size_t tdls_mle_len;
 	size_t prior_access_mle_len;
 	u8 mbssid_known_bss_len;
+	size_t rsne_override_len;
 
 	struct mb_ies_info mb_ies;
 

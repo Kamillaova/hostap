@@ -179,6 +179,10 @@ static int ieee802_11_parse_vendor_specific(const u8 *pos, size_t elen,
 			elems->pref_freq_list = pos;
 			elems->pref_freq_list_len = elen;
 			break;
+		case QCA_VENDOR_ELEM_RSNE_OVERRIDE:
+			elems->rsne_override = pos;
+			elems->rsne_override_len = elen;
+			break;
 		default:
 			wpa_printf(MSG_EXCESSIVE,
 				   "Unknown QCA information element ignored (type=%d len=%lu)",
