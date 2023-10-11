@@ -3814,6 +3814,19 @@ mscs_end:
 		wpa_ie_len += multi_ap_ie_len;
 	}
 
+	if (bss && wpa_bss_get_vendor_ie(bss, RSNE_OVERRIDE_IE_VENDOR_TYPE) &&
+	    wpa_ie_len + 2 + 4 <= max_wpa_ie_len) {
+		u8 *pos = wpa_ie;
+
+		/* Indicate support for RSN overriding */
+		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
+		*pos++ = 4;
+		WPA_PUT_BE32(pos, RSNE_OVERRIDE_IE_VENDOR_TYPE);
+		pos += 4;
+		wpa_hexdump(MSG_MSGDUMP, "RSNE Override", wpa_ie, pos - wpa_ie);
+		wpa_ie = pos;
+	}
+
 	params->wpa_ie = wpa_ie;
 	params->wpa_ie_len = wpa_ie_len;
 	params->auth_alg = algs;
