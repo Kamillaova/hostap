@@ -2016,6 +2016,7 @@ prepare_auth_resp_fils(struct hostapd_data *hapd,
 	if (*resp != WLAN_STATUS_SUCCESS)
 		goto fail;
 
+	//TODO: RSN override(?)
 	ie = wpa_auth_get_wpa_ie(hapd->wpa_auth, &ielen);
 	if (!ie) {
 		*resp = WLAN_STATUS_UNSPECIFIED_FAILURE;
@@ -2597,6 +2598,7 @@ static void hapd_initialize_pasn(struct hostapd_data *hapd,
 	pasn->use_anti_clogging = use_anti_clogging(hapd);
 	pasn->password = sae_get_password(hapd, sta, NULL, NULL, &pasn->pt,
 					  NULL);
+	//TODO: RSN override(?)
 	pasn->rsn_ie = wpa_auth_get_wpa_ie(hapd->wpa_auth, &pasn->rsn_ie_len);
 	pasn->rsnxe_ie = hostapd_wpa_ie(hapd, WLAN_EID_RSNX);
 	pasn->disable_pmksa_caching = hapd->conf->disable_pmksa_caching;
@@ -7763,6 +7765,7 @@ static size_t hostapd_eid_mbssid_elem_len(struct hostapd_data *hapd,
 		if (frame_type == WLAN_FC_STYPE_BEACON)
 			nontx_profile_len += 2;
 
+		//TODO: RSN override(?)
 		auth = wpa_auth_get_wpa_ie(bss->wpa_auth, &auth_len);
 		if (auth) {
 			rsn = get_ie(auth, auth_len, WLAN_EID_RSN);
@@ -7908,6 +7911,7 @@ static u8 * hostapd_eid_mbssid_elem(struct hostapd_data *hapd, u8 *eid, u8 *end,
 			*eid++ = i; /* BSSID Index */
 		}
 
+		//TODO: RSN override(?)
 		auth = wpa_auth_get_wpa_ie(bss->wpa_auth, &auth_len);
 		if (auth) {
 			rsn = get_ie(auth, auth_len, WLAN_EID_RSN);
