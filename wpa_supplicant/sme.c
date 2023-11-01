@@ -2429,6 +2429,15 @@ mscs_fail:
 		wpa_s->sme.assoc_req_ie_len += multi_ap_ie_len;
 	}
 
+#ifdef CONFIG_TESTING_OPTIONS
+	{
+		extern bool wpas_disable_rsn_override;
+
+		if (wpas_disable_rsn_override)
+			goto skip_rsne_override;
+	}
+#endif /* CONFIG_TESTING_OPTIONS */
+
 	if (wpa_s->current_bss &&
 	    wpa_bss_get_vendor_ie(wpa_s->current_bss,
 				  RSNE_OVERRIDE_IE_VENDOR_TYPE) &&
@@ -2442,6 +2451,10 @@ mscs_fail:
 		WPA_PUT_BE32(pos, RSNE_OVERRIDE_IE_VENDOR_TYPE);
 		wpa_s->sme.assoc_req_ie_len += 2 + 4;
 	}
+
+#ifdef CONFIG_TESTING_OPTIONS
+skip_rsne_override:
+#endif /* CONFIG_TESTING_OPTIONS */
 
 	params.bssid = bssid;
 	params.ssid = wpa_s->sme.ssid;

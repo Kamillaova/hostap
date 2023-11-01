@@ -879,6 +879,10 @@ static int wpa_supplicant_ctrl_iface_set(struct wpa_supplicant *wpa_s,
 	} else if (os_strcasecmp(cmd, "dpp_test") == 0) {
 		dpp_test = atoi(value);
 #endif /* CONFIG_DPP */
+	} else if (os_strcasecmp(cmd, "disable_rsn_override") == 0) {
+		extern bool wpas_disable_rsn_override;
+
+		wpas_disable_rsn_override = atoi(value);
 #endif /* CONFIG_TESTING_OPTIONS */
 #ifdef CONFIG_FILS
 	} else if (os_strcasecmp(cmd, "disable_fils") == 0) {
@@ -8902,6 +8906,11 @@ static void wpa_supplicant_ctrl_iface_flush(struct wpa_supplicant *wpa_s)
 	wpa_s->dpp_discard_public_action = 0;
 	dpp_test = DPP_TEST_DISABLED;
 #endif /* CONFIG_DPP */
+	{
+		extern bool wpas_disable_rsn_override;
+
+		wpas_disable_rsn_override = false;
+	}
 #endif /* CONFIG_TESTING_OPTIONS */
 
 	wpa_s->disconnected = 0;

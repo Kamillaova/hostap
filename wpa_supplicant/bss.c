@@ -21,6 +21,11 @@
 #include "bssid_ignore.h"
 #include "bss.h"
 
+#ifdef CONFIG_TESTING_OPTIONS
+bool wpas_disable_rsn_override = false;
+#endif /* CONFIG_TESTING_OPTIONS */
+
+
 static void wpa_bss_set_hessid(struct wpa_bss *bss)
 {
 #ifdef CONFIG_INTERWORKING
@@ -1842,6 +1847,11 @@ const u8 * wpa_bss_get_rsne(const struct wpa_bss *bss)
 {
 	const u8 *ie;
 
+#ifdef CONFIG_TESTING_OPTIONS
+	if (wpas_disable_rsn_override)
+		return wpa_bss_get_ie(bss, WLAN_EID_RSN);
+#endif /* CONFIG_TESTING_OPTIONS */
+
 	ie = wpa_bss_get_vendor_ie(bss, RSNE_OVERRIDE_IE_VENDOR_TYPE);
 	if (ie)
 		return ie;
@@ -1852,6 +1862,11 @@ const u8 * wpa_bss_get_rsne(const struct wpa_bss *bss)
 const u8 * wpa_bss_get_rsnxe(const struct wpa_bss *bss)
 {
 	const u8 *ie;
+
+#ifdef CONFIG_TESTING_OPTIONS
+	if (wpas_disable_rsn_override)
+		return wpa_bss_get_ie(bss, WLAN_EID_RSNX);
+#endif /* CONFIG_TESTING_OPTIONS */
 
 	ie = wpa_bss_get_vendor_ie(bss, RSNXE_OVERRIDE_IE_VENDOR_TYPE);
 	if (ie)
