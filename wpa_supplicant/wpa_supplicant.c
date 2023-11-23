@@ -3816,7 +3816,7 @@ mscs_end:
 
 	if (bss && wpa_bss_get_vendor_ie(bss, RSNE_OVERRIDE_IE_VENDOR_TYPE) &&
 	    wpa_ie_len + 2 + 4 <= max_wpa_ie_len) {
-		u8 *pos = wpa_ie;
+		u8 *pos = wpa_ie + wpa_ie_len;
 
 		/* Indicate support for RSN overriding */
 		*pos++ = WLAN_EID_VENDOR_SPECIFIC;
@@ -3824,7 +3824,7 @@ mscs_end:
 		WPA_PUT_BE32(pos, RSNE_OVERRIDE_IE_VENDOR_TYPE);
 		pos += 4;
 		wpa_hexdump(MSG_MSGDUMP, "RSNE Override", wpa_ie, pos - wpa_ie);
-		wpa_ie = pos;
+		wpa_ie_len += 2 + 4;
 	}
 
 	params->wpa_ie = wpa_ie;
