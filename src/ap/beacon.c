@@ -2443,7 +2443,8 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 	/* If SAE offload is enabled, provide password to lower layer for
 	 * SAE authentication and PMK generation.
 	 */
-	if (wpa_key_mgmt_sae(hapd->conf->wpa_key_mgmt) &&
+	if (wpa_key_mgmt_sae(hapd->conf->wpa_key_mgmt |
+			     hapd->conf->rsn_override_key_mgmt) &&
 	    (hapd->iface->drv_flags2 & WPA_DRIVER_FLAGS2_SAE_OFFLOAD_AP)) {
 		if (hostapd_sae_pk_in_use(hapd->conf)) {
 			wpa_printf(MSG_ERROR,
@@ -2488,7 +2489,8 @@ int ieee802_11_build_ap_params(struct hostapd_data *hapd,
 	else if (hapd->conf->wpa & WPA_PROTO_WPA)
 		params->pairwise_ciphers = hapd->conf->wpa_pairwise;
 	params->group_cipher = hapd->conf->wpa_group;
-	params->key_mgmt_suites = hapd->conf->wpa_key_mgmt;
+	params->key_mgmt_suites = hapd->conf->wpa_key_mgmt |
+		hapd->conf->rsn_override_key_mgmt;
 	params->auth_algs = hapd->conf->auth_algs;
 	params->wpa_version = hapd->conf->wpa;
 	params->privacy = hapd->conf->wpa;
