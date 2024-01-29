@@ -683,6 +683,10 @@ int wpa_auth_gen_wpa_ie(struct wpa_authenticator *wpa_auth)
 		if (res < 0)
 			return res;
 		os_free(wpa_auth->rsnxe_override);
+		if (res == 0) {
+			wpa_auth->rsnxe_override = NULL;
+			return 0;
+		}
 		wpa_auth->rsnxe_override = os_malloc(res - 4);
 		if (!wpa_auth->rsnxe_override)
 			return -1;
