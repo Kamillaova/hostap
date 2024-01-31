@@ -1631,10 +1631,18 @@ int wpa_bss_parse_basic_ml_element(struct wpa_supplicant *wpa_s,
 
 	if (ssid) {
 		struct wpa_ie_data ie;
+		const u8 *rsne;
+		size_t rsne_len;
 
-		if (!elems.rsn_ie ||
-		    wpa_parse_wpa_ie(elems.rsn_ie - 2, 2 + elems.rsn_ie_len,
-				     &ie)) {
+		if (elems.rsne_override) {
+			rsne = elems.rsne_override;
+			rsne_len = elems.rsne_override_len;
+		} else {
+			rsne = elems.rsn_ie;
+			rsne_len = elems.rsn_ie_len;
+		}
+		if (!rsne ||
+		    wpa_parse_wpa_ie(rsne - 2, 2 + rsne_len, &ie)) {
 			wpa_dbg(wpa_s, MSG_DEBUG, "MLD: No RSN element");
 			goto out;
 		}
